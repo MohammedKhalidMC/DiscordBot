@@ -1,4 +1,5 @@
 import discord
+from discord import app_commands
 from google import genai
 import json
 import base64
@@ -6,6 +7,7 @@ import base64
 gemini_api_key = None
 discord_token = None
 interactionID = None
+test_guild = discord.Object(id=788862330065911840)
 
 with open("tokens.json") as f:
     tokens = json.loads(f.read())
@@ -19,11 +21,14 @@ gemini_client = genai.Client(api_key=gemini_api_key)
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
+tree = app_commands.CommandTree(client)
 msgs = []
 
 @client.event
 async def on_ready():
     print(f'We have logged in as {client.user}')
+    tree.copy_global_to(guild=test_guild)
+    await tree.sync(guild=test_guild)
 
 @client.event
 async def on_message(message):
@@ -77,5 +82,10 @@ async def on_message(message):
         print("Interaction ID: " + interactionID)
     else:
         msgs.append(f"Username: {message.author}\nName: {message.author.display_name}\nMessage: {message.content}")
+
+@tree.command(name="ping", description="Ping Botty to test the connection.")
+async def chat(interaction: discord.Interaction):
+    await interaction.response.send_message("Pong 🏓")
+
 
 client.run(discord_token)
